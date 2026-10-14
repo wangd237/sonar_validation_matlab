@@ -1,13 +1,10 @@
 # MATLAB simulation data
 *.mat
-
 # Bellhop generated files
 *.arr
 *.shd
 *.prt
-
-# Temporary simulation workspace
-/results/propagation/work/
-
+# 整个仿真输出结果文件夹全部忽略
+results/
 # Generated demo data
-/demo_data/
+demo_data/
