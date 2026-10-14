@@ -1,0 +1,38 @@
+正在运行 test_propagation_metrics
+.......... ..
+已完成 test_propagation_metrics
+__________
+
+Bellhop propagation demo: synthetic reference, demonstration thresholds.
+[1/4] Identical-input self-check...
+Identical-input Bellhop self-check: PASS (1108 matched arrivals).
+[2/4] Source-depth perturbation comparison...
+
+==== 声传播模型配置对比（合成参考、演示阈值） ====
+     Domain        Metric      Level      Value       Status 
+    _________    __________    _____    __________    _______
+
+    "多途"       "E_MP"         "K"      0.0022573    "通过"  
+    "时延"       "RMSE_tau"     "A"     0.00074164    "通过"  
+    "传播损失"    "RMSE_TL"      "K"         7.3908    "不通过"
+    "频率响应"    "E_H"          "A"            NaN    "未启用"
+    "空间声场"    "E_SP"         "K"         1.3629    "不通过"
+    "空间声场"    "rho_SP"       "A"        0.10807    "不通过"
+
+[3/4] Frequency / source-depth sensitivity scan...
+Propagation scan: 250 Hz, source offset +0 m, 通过
+Propagation scan: 250 Hz, source offset +1 m, 不通过
+Propagation scan: 250 Hz, source offset +2 m, 不通过
+Propagation scan: 500 Hz, source offset +0 m, 通过
+Propagation scan: 500 Hz, source offset +1 m, 不通过
+Propagation scan: 500 Hz, source offset +2 m, 不通过
+Propagation scan: 1000 Hz, source offset +0 m, 通过
+Propagation scan: 1000 Hz, source offset +1 m, 不通过
+Propagation scan: 1000 Hz, source offset +2 m, 不通过
+[4/4] Known source-depth perturbation restoration...
+        Model         DemoStatus    DemoAnomalyScore    SelfCheckPassed      E_H               Scope          
+    ______________    __________    ________________    _______________    _______    ________________________
+
+    "声传播计算模型"     "不通过"           0.6766              true          "未启用"    "合成配置对比，使用演示阈值" 
+
+Results: E:\sonar_validation_matlab\sonar_validation_matlab\results\propagation

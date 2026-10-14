@@ -1,0 +1,13 @@
+# MATLAB simulation data
+*.mat
+
+# Bellhop generated files
+*.arr
+*.shd
+*.prt
+
+# Temporary simulation workspace
+/results/propagation/work/
+
+# Generated demo data
+/demo_data/

@@ -1,0 +1,7 @@
+Domain,Metric,Unit,Level,Enabled,Value,PassThreshold,FailThreshold,Direction,Weight,Status,Why
+多途,E_MP,1,K,1,0,0.2,0.5,lower,0.25,通过,有效到达按反射次数分组，在时延门限内一对一匹配；未匹配数/两侧到达总数。
+时延,RMSE_tau,s,A,1,0,0.003,0.005,lower,0.1,通过,所有匹配到达的时延误差RMSE；无匹配时不记零。
+传播损失,RMSE_TL,dB,K,1,0,5,8,lower,0.25,通过,共同有效网格上TL差的RMSE；采用统一幅度下限。
+频率响应,E_H,1,A,0,NaN,NaN,NaN,lower,0,未启用,预留接口，当前不参与运行、评分和判定。
+空间声场,E_SP,1,K,1,0,0.5,1,lower,0.25,通过,共同有效网格上复声场差的二范数/参考复声场二范数。
+空间声场,rho_SP,1,A,1,1,0.85,0.7,higher,0.15,通过,复声场内积模/两侧范数乘积，不去均值。

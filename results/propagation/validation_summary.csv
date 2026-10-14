@@ -1,0 +1,2 @@
+Model,DemoStatus,DemoAnomalyScore,SelfCheckPassed,E_H,Scope
+声传播计算模型,不通过,0.740033605932922,1,未启用,合成配置对比，使用演示阈值
