@@ -4,7 +4,11 @@ function cfg=propagation_accuracy_v2_config()
 cfg.weights=ones(10,1);
 cfg.min_peak_prominence_db=10;
 cfg.width_drop_db=3;
-cfg.smooth_window_m=500;
+% Extract the macroscopic convergence/shadow-zone envelope at the source
+% depth.  The previous 500 m window mainly followed short-range interference.
+cfg.evaluation_depth_m=500;
+cfg.evaluation_depth_tolerance_m=25;
+cfg.smooth_window_m=5000;
 cfg.maximum_zone_step_m=250;
 cfg.arrival_relative_floor_db=-40;
 cfg.match_delay_s=0.005;

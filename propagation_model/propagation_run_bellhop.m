@@ -85,9 +85,9 @@ assert(isscalar(freq_vec) && numel(source_depth)==1 && ...
     'propagation:Grid','Expected one frequency/source/bearing and a 2-D receiver section.');
 assert(abs(double(freq_vec(1))-double(arr_freq))<1e-4, ...
     'propagation:Grid','A/C frequencies differ.');
-assert_same(ap.range_m,receiver_range,'A/C receiver range');
-assert_same(ap.receiver_depth_m,receiver_depth,'A/C receiver depth');
-assert_same(ap.source_depth_m,source_depth,'A/C source depth');
+propagation_assert_same_coordinates(ap.range_m,receiver_range,'A/C receiver range');
+propagation_assert_same_coordinates(ap.receiver_depth_m,receiver_depth,'A/C receiver depth');
+propagation_assert_same_coordinates(ap.source_depth_m,source_depth,'A/C source depth');
 out.freq_hz=double(freq_vec(1));
 out.source_depth_m=double(source_depth(:));
 out.receiver_depth_m=double(receiver_depth(:));
@@ -126,11 +126,6 @@ n=fscanf(fid,'%d',1); data=fscanf(fid,'%f',[2,n]).';
 assert(n>=2 && size(data,1)==n && all(isfinite(data(:))) && all(diff(data(:,1))>0), ...
     'propagation:BoundaryFormat','Invalid boundary coordinates: %s',filename);
 data(:,1)=1000*data(:,1); % boundary files use km
-end
-
-function assert_same(a,b,label)
-assert(numel(a)==numel(b) && all(abs(double(a(:))-double(b(:)))<1e-3), ...
-    'propagation:Grid','%s coordinates differ.',label);
 end
 
 function write_text(filename,content)

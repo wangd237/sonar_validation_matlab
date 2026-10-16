@@ -33,6 +33,7 @@ end
 
 function testIdenticalCurveAndNoZone(tc)
 cfg=tc.TestData.cfg;
+cfg.smooth_window_m=1;
 r=(0:50:10000).';
 tl=80-12*exp(-0.5*((r-5000)/500).^2);
 a=struct('range_m',r,'tl_db',tl);
@@ -153,6 +154,23 @@ verifyError(tc,@() propagation_accuracy_v2(struct(),struct(),cfg), ...
     'propagation:AccuracyWeights');
 end
 
+function testBellhopAdapterUsesConfiguredEvaluationDepth(tc)
+cfg=tc.TestData.cfg;
+ref=bellhop_fixture(); sim=ref;
+out=propagation_accuracy_v2_from_bellhop(ref,sim,cfg);
+verifyEqual(tc,out.requested_receiver_depth_m,500);
+verifyEqual(tc,out.receiver_depth_m,500);
+end
+
+function testBellhopAdapterRejectsUnavailableEvaluationDepth(tc)
+cfg=tc.TestData.cfg;
+cfg.evaluation_depth_m=525;
+cfg.evaluation_depth_tolerance_m=20;
+ref=bellhop_fixture();
+verifyError(tc,@() propagation_accuracy_v2_from_bellhop(ref,ref,cfg), ...
+    'propagation:AccuracyDepth');
+end
+
 function z=zone(c,w)
 z=struct('center_m',c,'left_m',c-w/2,'right_m',c+w/2, ...
     'width_m',w,'prominence_db',12,'truncated',false);
@@ -165,4 +183,13 @@ a.top_bounces=zeros(numel(t),1);
 a.bottom_bounces=zeros(numel(t),1);
 a.tx_time_s=0;
 a.system_delay_s=0;
+end
+
+function out=bellhop_fixture()
+out.range_m=(0:100:1000).';
+out.receiver_depth_m=[100;500;1000];
+[R,Z]=meshgrid(out.range_m,out.receiver_depth_m);
+out.tl_db=60+0.001*R+0.002*Z;
+out.valid_mask=true(size(out.tl_db));
+out.arrivals=repmat({arrival([1;1.02])},size(out.tl_db));
 end
