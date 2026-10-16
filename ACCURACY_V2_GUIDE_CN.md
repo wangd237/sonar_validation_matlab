@@ -1,26 +1,57 @@
-# 准确性 V2（独立增量，Mock 阶段）
+# 准确性 V2 模块（独立运行 / Mock 阶段）
 
-新版入口 `propagation_accuracy_v2(reference,simulation,cfg)`。老版五项启用指标及普适性/溯源性暂不变；现有准确性入口还会额外保存 `propagation_accuracy_v2_metrics.csv`，并将完整结果放在 `result.accuracy_v2` 中。
+## 独立入口
 
-## 数据边界
+在 MATLAB 仓库根目录运行：
 
-- 新版直接接受已抽取的**单一接收深度** `range_m`（米）和 `tl_db`（dB）两个列向量；只比较严格相同的共同采样点，不外推、不大范围插值。
-- Bellhop Mock 接口 `propagation_accuracy_v2_from_bellhop` 取接收阵几何中心最近的深度行，选用最长连续有效距离段。
-- 区域使用窗口按米定义的 `smooth` 移动平均（缺少 smooth 时退化为 `movmean`）；暂不下采样、不设置最小持续距离。以 `findpeaks` 的10 dB显著度门限寻找 `-TL` 的汇聚峰和 `TL` 的影区峰。宽度取距峰顶固定下降3 dB的左右首次交点，**不是 half-prominence**；范围越界则宽度为 NaN。
-- 区域中心用参考侧自适应门限 `max(W_ref,0.1*abs(R_ref))` 按距离顺序一对一匹配，允许漏检、多检；两侧数量均为0时数量项视为一致，但位置和宽度仍记未验证。
-- 多径需要 `arrivals.delay_s`、`amplitude`、`top_bounces`、`bottom_bounces`、`tx_time_s`、`system_delay_s`，其中后两个校正字段必须明确提供。Bellhop Mock 明确设为零；真实测量数据不得沿用这两个零值假设。单个接收位置计算主要路径的到达时延 RMSE、相邻有效匹配路径的时延间隔 RMSE、最后有效到达时刻绝对误差。
-- 真实测量/待验模型的 JSON 输入与标准数据适配器目前**没有实现**，待输入契约和真实数据到位后对接。
+```matlab
+run_accuracy_validation
+```
 
-## 评分契约
+此命令仅运行准确性，不自动运行普适性或溯源性。原 `run_all`、`run_propagation_validation` 已停用。
 
-- 十个固定指标分别输出 `Metric / Score / Status / Weight`，子指标及误差明细放在 `detail`；总评只读这十项结果，不读取物理特征。
-- 外部仅需编辑 `cfg.weights`（十个权重，默认均为1）。
-- 内部误差阈值和0—100映射暂为**Mock 演示占位**（`propagation_accuracy_v2_config`），不代表专家验收标准；分数 >=80 为准确，60—80为关注，否则不准确。
-- 任一正权重指标未验证时，**整体暂不产生分数和等级**，以免擅自决定缺失指标如何聚合；等待对“未验证”含义的核实。
+内部调用关系：
 
-## 测试
+```text
+run_accuracy_validation
+  -> propagation_accuracy_validation
+      -> Bellhop mock reference + simulation
+      -> propagation_accuracy_v2_from_bellhop
+          -> propagation_accuracy_v2
+              -> TL RMSE / Pearson
+              -> 1-D zone extraction / matching
+              -> corrected arrival matching
+              -> independent scores for ten indicators
+              -> propagation_accuracy_aggregate_scores
+      -> per-indicator CSV / raw submetric CSV / TL plot / MAT
+```
 
-MATLAB 环境执行：
+## 数据与算法
+
+- `propagation_accuracy_v2` 接受同一接收深度的 `range_m` 和 `tl_db` 列向量。仅比较双方共有的原始采样距离，不大范围插值。
+- Bellhop Mock 适配器默认取接收阵几何中心最近的深度行，并使用最长连续有效距离段。该适配器不代表未来实测接口。
+- 区域检测：`smooth`（若不可用则 `movmean`）的移动平均；当前不下采样、不增加最小持续距离门限。汇聚区检测 `-TL`、影区检测 `TL`；`MinPeakProminence=10 dB`，宽度为距离峰顶固定下降3 dB左右交点，而非 MATLAB 默认半突起度宽度。无法找到完整交点的区域会被标记截断，宽度为 NaN。
+- 匹配：两侧区域一对一，参考侧门限 `max(W_ref,0.1*abs(R_ref))`。若参考区宽度因截断不可计算，目前只使用 0.1R 作为匹配上限。数量指标报告数量误差及 TP/FP/FN；中心和宽度只比较匹配成功且能提取的特征。
+- 到达信息：`delay_s`、`amplitude`、`top_bounces`、`bottom_bounces`、`tx_time_s`、`system_delay_s`。时间校正字段必须提供，不能推断实际测量的发射时刻或设备延迟。Bellhop Mock 适配器明确使用两个零校正量；同一接收点计算主要路径到达时延 RMSE、相邻有效匹配时延间隔 RMSE 和最后有效到达时刻的绝对误差。
+- 没有可提取数据或没有可匹配特征的子项暂记为「未验证」，这与误差等于0严格区分。
+
+## 评分接口
+
+每项指标都返回独立 `Score`（0—100）、`Status`（准确/关注/不准确/未验证）、`Weight`。总评函数 `propagation_accuracy_aggregate_scores` **只接受十个指标的得分、状态、权重**，不读取物理量或子指标。
+
+- 唯一面向专家的配置是 `propagation_accuracy_v2_config().weights`，十项初始权重全部为1。
+- 单项内部 `cfg.limits.*` 阈值为 Mock 演示占位，并非已经验证的物理验收标准；映射采用 80 / 60 分三级锚点。
+- 只要正权重指标存在「未验证」，整体总分和等级暂记「未验证」，**不擅自零分处理或改权重重算**；待确认规则后再修改。
+- 普适性和溯源性仍调用旧版 `propagation_build_metric_table`，后续需基于 V2 统一准确性接口另行更新，当前不混合成一张总报表。
+
+## 输出
+
+- `results/propagation/accuracy/propagation_accuracy_metrics.csv`：10项指标分数、状态和权重；
+- `results/propagation/accuracy/propagation_accuracy_submetrics.csv`：可导出的量化子指标（例如 TL RMSE、Pearson、TP/FP/FN、位置偏差和时延差异）；
+- `results/propagation/accuracy/propagation_accuracy_tl_curve.png`：相同深度、共同距离下的 TL 曲线及差异；
+- `results/propagation/accuracy/propagation_accuracy_result.mat`：完整指标、匹配明细、标准化输入、Mock 元信息以及总体评定。
+
+## 测试状态
 
 ```matlab
 addpath(genpath(pwd))
@@ -28,4 +59,4 @@ results = runtests('tests/test_accuracy_v2.m');
 assertSuccess(results)
 ```
 
-此代码提交前未能在当前工具环境中实际运行 MATLAB/Bellhop，需完成上面的测试与真实数据契约验证。
+当前会话可编辑 GitHub 仓库，但没有可调用的 MATLAB/Bellhop 本地运行环境。因而不能宣称本次代码已通过 MATLAB 运行测试。提交属于代码与接口集成，不等同于实测准确性验证。
