@@ -61,7 +61,8 @@ out.detail=detail;
 out.total_score=NaN; out.overall_status="未验证";
 % Do not silently reweight missing indicators until the user decides semantics.
 if all(isfinite(score(cfg.weights>0))) && any(cfg.weights>0)
-    out.total_score=sum(score.*cfg.weights)/sum(cfg.weights);
+    active=cfg.weights>0;
+    out.total_score=sum(score(active).*cfg.weights(active))/sum(cfg.weights(active));
     if out.total_score>=80, out.overall_status="准确";
     elseif out.total_score>=60, out.overall_status="关注";
     else, out.overall_status="不准确"; end
