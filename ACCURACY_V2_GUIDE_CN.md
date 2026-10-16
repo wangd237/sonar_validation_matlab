@@ -49,7 +49,17 @@ run_accuracy_validation
 - `results/propagation/accuracy/propagation_accuracy_metrics.csv`：10项指标分数、状态和权重；
 - `results/propagation/accuracy/propagation_accuracy_submetrics.csv`：可导出的量化子指标（例如 TL RMSE、Pearson、TP/FP/FN、位置偏差和时延差异）；
 - `results/propagation/accuracy/propagation_accuracy_tl_curve.png`：相同深度、共同距离下的 TL 曲线及差异；
-- `results/propagation/accuracy/propagation_accuracy_result.mat`：完整指标、匹配明细、标准化输入、Mock 元信息以及总体评定。
+- `results/propagation/accuracy/propagation_accuracy_convergence_zones.png`：原始/平滑 TL、汇聚区中心、3 dB边界、匹配门限与匹配连线；
+- `results/propagation/accuracy/propagation_accuracy_shadow_zones.png`：相同要素，用于影区；
+- `results/propagation/accuracy/propagation_accuracy_zone_detections.csv`：每个检测区域的 Ref/Sim、中心、边界、宽度、显著度、截断标记和匹配状态；
+- `results/propagation/accuracy/propagation_accuracy_zone_matches.csv`：成功匹配的区域对应关系、中心偏差、匹配容差、宽度差；
+- `results/propagation/accuracy/propagation_accuracy_result.mat`：完整指标、原始检测与匹配明细、标准化输入、Mock 元信息以及总体评定。
+
+两个诊断 PNG 都有三层：Ref TL、Sim TL、区域匹配示意。前两层以灰色显示原始 TL、彩色显示平滑后的 TL；三角形标记中心，水平粗线和圆点标记固定3 dB下降点宽度。第三层蓝色横线表示每个参考区域的自适应匹配容差，绿色连线表示匹配成功，红叉表示未匹配。若未找到3 dB边界，宽度记 NaN，不绘制对应区间。
+
+这些结果直接取自 `propagation_accuracy_v2` 已参与评分的候选区域和匹配对，**画图不执行二次 findpeaks**。如果距离分辨率不足而不能提取区域，程序会删除之前留下的区域诊断图与区域 CSV，并在控制台提示，避免误读过期图表。
+
+后续实验使用标准经验公式设计的环境时，只需修改 `propagation_default_scene.m` 中参考和仿真三件套路径，再独立运行 `run_accuracy_validation`。此阶段没有实现自动生成经验环境。
 
 ## 测试状态
 

@@ -7,6 +7,10 @@ names=["TL_curve";"Convergence_count";"Convergence_center";"Convergence_width"; 
     "Shadow_count";"Shadow_position";"Shadow_width"; ...
     "Arrival_delay";"Adjacent_delay";"Last_arrival"];
 score=nan(10,1); status=repmat("未验证",10,1); detail=cell(10,1);
+% Preserve EXACT detection/matching inputs for post-run diagnosis. Visualization
+% must use the same features and pairs as scoring; no secondary peak detection.
+zone_diag=struct('available',false,'reference',[],'simulation',[], ...
+    'convergence_pairs',zeros(0,2),'shadow_pairs',zeros(0,2));
 assert(isequal(size(cfg.weights),[10 1]) && all(isfinite(cfg.weights)) ...
     && all(cfg.weights>=0),'propagation:AccuracyWeights','Invalid weights.');
 % Only explicit single-depth TL vectors are used; never fabricate spatial coverage.
@@ -40,6 +44,11 @@ if has_tl
         fb=propagation_extract_tl_features(r,b(ib),cfg);
         [score(2:4),detail(2:4)]=zone_group(fa.convergence,fb.convergence,cfg);
         [score(5:7),detail(5:7)]=zone_group(fa.shadow,fb.shadow,cfg);
+        zone_diag.available=true;
+        zone_diag.reference=fa;
+        zone_diag.simulation=fb;
+        zone_diag.convergence_pairs=detail{3}.pairs;
+        zone_diag.shadow_pairs=detail{6}.pairs;
     end
 end
 % Multi-path input represents a single, identified receiver; use no invented
@@ -58,6 +67,7 @@ end
 out.metrics=table(names,score,status,cfg.weights,'VariableNames', ...
     {'Metric','Score','Status','Weight'});
 out.detail=detail;
+out.zone_diagnostics=zone_diag;
 [out.total_score,out.overall_status]= ...
     propagation_accuracy_aggregate_scores(out.metrics);
 end

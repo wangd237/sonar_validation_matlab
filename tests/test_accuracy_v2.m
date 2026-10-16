@@ -92,6 +92,60 @@ verifyTrue(tc,any(raw.SubMetric=="rmse_db"));
 verifyTrue(tc,any(raw.SubMetric=="pearson"));
 end
 
+function testZoneDiagnosticsUseSamePairsAsScoring(tc)
+cfg=tc.TestData.cfg;
+cfg.smooth_window_m=1;
+r=(0:50:10000).';
+ref_tl=80-12*exp(-0.5*((r-3000)/500).^2) ...
+    -12*exp(-0.5*((r-7000)/500).^2);
+sim_tl=80-12*exp(-0.5*((r-3050)/500).^2) ...
+    -12*exp(-0.5*((r-7050)/500).^2);
+ref=struct('range_m',r,'tl_db',ref_tl);
+sim=struct('range_m',r,'tl_db',sim_tl);
+o=propagation_accuracy_v2(ref,sim,cfg);
+verifyTrue(tc,o.zone_diagnostics.available);
+[d,m]=propagation_accuracy_zone_diagnostic_tables(o);
+verifyEqual(tc,sum(d.ZoneType=="Convergence" & d.Dataset=="Ref"), ...
+    numel(o.zone_diagnostics.reference.convergence));
+verifyEqual(tc,sum(d.ZoneType=="Convergence" & d.Dataset=="Sim"), ...
+    numel(o.zone_diagnostics.simulation.convergence));
+verifyEqual(tc,size(m,1), ...
+    size(o.zone_diagnostics.convergence_pairs,1) + ...
+    size(o.zone_diagnostics.shadow_pairs,1));
+verifyEqual(tc,o.detail{2}.matched, ...
+    size(o.zone_diagnostics.convergence_pairs,1));
+verifyEqual(tc,o.detail{5}.matched, ...
+    size(o.zone_diagnostics.shadow_pairs,1));
+verifyTrue(tc,all(m.CenterError_m<=m.Tolerance_m));
+verifyGreaterThan(tc,height(m),0);
+temp=tempname; mkdir(temp);
+cleanup=onCleanup(@() rmdir(temp,'s')); %#ok<NASGU>
+propagation_accuracy_plot_zone_diagnostics(o,temp);
+verifyTrue(tc,isfile(fullfile(temp, ...
+    'propagation_accuracy_convergence_zones.png')));
+verifyTrue(tc,isfile(fullfile(temp, ...
+    'propagation_accuracy_shadow_zones.png')));
+end
+
+function testZoneDiagnosticsEmptyAndPlots(tc)
+cfg=tc.TestData.cfg;
+r=(0:100:8000).';
+ref=struct('range_m',r,'tl_db',60+zeros(size(r)));
+out=propagation_accuracy_v2(ref,ref,cfg);
+verifyTrue(tc,out.zone_diagnostics.available);
+[d,m]=propagation_accuracy_zone_diagnostic_tables(out);
+verifyEqual(tc,height(d),0);
+verifyEqual(tc,height(m),0);
+temp=tempname;
+mkdir(temp);
+cleanup=onCleanup(@() rmdir(temp,'s')); %#ok<NASGU>
+propagation_accuracy_plot_zone_diagnostics(out,temp);
+verifyTrue(tc,isfile(fullfile(temp, ...
+    'propagation_accuracy_convergence_zones.png')));
+verifyTrue(tc,isfile(fullfile(temp, ...
+    'propagation_accuracy_shadow_zones.png')));
+end
+
 function testInvalidInputAndWeights(tc)
 cfg=tc.TestData.cfg;
 cfg.weights(1)=-1;

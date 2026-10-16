@@ -19,7 +19,7 @@ run_traceability_validation   % 溯源性：旧版指标，待后续更新
 
 | 模块 | 输出目录 | 主要结果 |
 |---|---|---|
-| 准确性 V2 | `results/propagation/accuracy/` | `propagation_accuracy_metrics.csv`、`propagation_accuracy_submetrics.csv`、`propagation_accuracy_tl_curve.png`、`propagation_accuracy_result.mat` |
+| 准确性 V2 | `results/propagation/accuracy/` | `propagation_accuracy_metrics.csv`、`propagation_accuracy_submetrics.csv`、`propagation_accuracy_tl_curve.png`、汇聚区/影区诊断图与 CSV、`propagation_accuracy_result.mat` |
 | 普适性（旧版） | `results/propagation/universality/` | `propagation_universality_scene_results.csv`、统计 CSV、MAT、图片 |
 | 溯源性（旧版） | `results/propagation/traceability/` | `propagation_traceability_parameter_ranking.csv`、基线 CSV、MAT、图片 |
 
@@ -48,6 +48,19 @@ scene.bellhop_exe = 'D:\code\Matlab\COA_cxz\bin\bellhop.exe';
 - 每项指标独立生成 0–100 分，最终汇总只依赖十项分数、状态和权重。默认十个权重都是 1；单项评分阈值当前是程序内部演示占位值。
 - 任一正权重项为“未验证”时，**暂不产生整体分数**，等待明确该状态的汇总语义。这不影响其他已得到的指标和子指标。
 - 实测参考和 JSON 待验模型适配接口仍待后续接入。
+
+### 汇聚区 / 影区检测诊断
+
+本轮增加以下文件（仅针对准确性）：
+
+- `propagation_accuracy_convergence_zones.png`：Ref、Sim 各自的原始/平滑 TL，汇聚区中心、固定3 dB宽度及匹配关系。
+- `propagation_accuracy_shadow_zones.png`：同样方式检查影区检测。
+- `propagation_accuracy_zone_detections.csv`：检测到的每一个区域及其中心、边界、显著度、是否截断、是否匹配、参考匹配容差。
+- `propagation_accuracy_zone_matches.csv`：每一对成功匹配的区域及其中心距离偏差、宽度偏差和容差。
+
+**图片和 CSV 均使用实际参与评分的同一组检测结果**，不会为出图重新识别。图中蓝色容差线段表示每个参考区域的匹配门限，红叉表示没有匹配；没有完整3 dB左右边界时保留中心但宽度标为 NaN。
+
+未来换用标准经验公式设计的环境时，只需要更新 `propagation_default_scene.m` 中相应的三件套路径并再次运行 `run_accuracy_validation`，即可重新生成诊断图。当前**没有自动修改环境文件**，也没有更改算法阈值。
 
 算法及接口细节见 [ACCURACY_V2_GUIDE_CN.md](ACCURACY_V2_GUIDE_CN.md)。
 
