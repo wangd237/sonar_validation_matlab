@@ -19,7 +19,7 @@ run_traceability_validation   % 溯源性：旧版指标，待后续更新
 
 | 模块 | 输出目录 | 主要结果 |
 |---|---|---|
-| 准确性 V2 | `results/propagation/accuracy/` | `propagation_accuracy_metrics.csv`、`propagation_accuracy_submetrics.csv`、`propagation_accuracy_tl_curve.png`、汇聚区/影区诊断图与 CSV、`propagation_accuracy_result.mat` |
+| 准确性 V2 | `results/propagation/accuracy/` | `propagation_accuracy_metrics.csv`、`propagation_accuracy_submetrics.csv`、`propagation_accuracy_tl_curve.png`、`propagation_accuracy_tl_field_2d.png`、汇聚区/影区诊断图与 CSV、`propagation_accuracy_result.mat` |
 | 普适性（旧版） | `results/propagation/universality/` | `propagation_universality_scene_results.csv`、统计 CSV、MAT、图片 |
 | 溯源性（旧版） | `results/propagation/traceability/` | `propagation_traceability_parameter_ranking.csv`、基线 CSV、MAT、图片 |
 
@@ -48,6 +48,15 @@ scene.bellhop_exe = 'D:\code\Matlab\COA_cxz\bin\bellhop.exe';
 - 每项指标独立生成 0–100 分，最终汇总只依赖十项分数、状态和权重。默认十个权重都是 1；单项评分阈值当前是程序内部演示占位值。
 - 任一正权重项为“未验证”时，**暂不产生整体分数**，等待明确该状态的汇总语义。这不影响其他已得到的指标和子指标。
 - 实测参考和 JSON 待验模型适配接口仍待后续接入。
+
+### 二维 TL 场可视化
+
+`run_accuracy_validation` 额外生成 `results/propagation/accuracy/propagation_accuracy_tl_field_2d.png`，按完整接收深度×距离网格绘制 Reference TL、Simulation TL 和 Simulation−Reference TL 三个子图。
+
+- Ref 与 Sim 采用相同 TL(dB) 色标，避免因独立自动色标而误读相对差别；
+- 差值图采用以 0 dB 为中心的对称色标，负误差为蓝、正误差为红；
+- 无效水域 / 非有限值以灰色遮蔽，仅在 Ref/Sim 共同有效的网格点计算差值；
+- 暂不标出一维 TL 评价所选的接收深度。该图仅用于诊断，不改变10项指标或权重。
 
 ### 汇聚区 / 影区检测诊断
 
