@@ -7,9 +7,9 @@ root = fileparts(fileparts(mfilename('fullpath')));
 
 scene.model_name = 'propagation_model';
 % 模型名称标识
-scene.reference_root = fullfile(root,'cases','mycases','reference','ShallowWater');
+scene.reference_root = fullfile(root,'cases','mycases','reference','MunkB_Coh');
 % 基准参考结果文件夹（reference：参考Bellhop输出，作为对比真值，合成参考场）
-scene.simulation_root = fullfile(root,'cases','mycases','simulation','ShallowWater');
+scene.simulation_root = fullfile(root,'cases','mycases','simulation','MunkB_Coh');
 % 待测试仿真的存放目录（被测模型输出）
 
 scene.toolbox_dir = 'D:\code\Matlab\COA_cxz\Matlab';
