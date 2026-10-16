@@ -64,6 +64,34 @@ verifyEqual(tc,out.metrics.Score(9),100,'AbsTol',1e-9);
 verifyEqual(tc,out.metrics.Score(10),100,'AbsTol',1e-9);
 end
 
+function testAggregationUsesOnlyScoresStatusesAndWeights(tc)
+names=strings(10,1);
+scores=100*ones(10,1);
+statuses=repmat("准确",10,1);
+weights=ones(10,1);
+T=table(names,scores,statuses,weights, ...
+    'VariableNames',{'Metric','Score','Status','Weight'});
+[s,level]=propagation_accuracy_aggregate_scores(T);
+verifyEqual(tc,s,100,'AbsTol',1e-12);
+verifyEqual(tc,level,"准确");
+T.Score(2)=NaN; T.Status(2)="未验证";
+[s,level]=propagation_accuracy_aggregate_scores(T);
+verifyTrue(tc,isnan(s));
+verifyEqual(tc,level,"未验证");
+end
+
+function testSubmetricCsvTableContract(tc)
+cfg=tc.TestData.cfg;
+r=(0:50:10000).';
+tl=80-12*exp(-0.5*((r-5000)/500).^2);
+a=struct('range_m',r,'tl_db',tl);
+o=propagation_accuracy_v2(a,a,cfg);
+raw=propagation_accuracy_v2_detail_table(o);
+verifyTrue(tc,istable(raw));
+verifyTrue(tc,any(raw.SubMetric=="rmse_db"));
+verifyTrue(tc,any(raw.SubMetric=="pearson"));
+end
+
 function testInvalidInputAndWeights(tc)
 cfg=tc.TestData.cfg;
 cfg.weights(1)=-1;
