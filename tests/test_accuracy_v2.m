@@ -117,6 +117,14 @@ verifyEqual(tc,o.detail{2}.matched, ...
 verifyEqual(tc,o.detail{5}.matched, ...
     size(o.zone_diagnostics.shadow_pairs,1));
 verifyTrue(tc,all(m.CenterError_m<=m.Tolerance_m));
+verifyGreaterThan(tc,height(m),0);
+temp=tempname; mkdir(temp);
+cleanup=onCleanup(@() rmdir(temp,'s')); %#ok<NASGU>
+propagation_accuracy_plot_zone_diagnostics(o,temp);
+verifyTrue(tc,isfile(fullfile(temp, ...
+    'propagation_accuracy_convergence_zones.png')));
+verifyTrue(tc,isfile(fullfile(temp, ...
+    'propagation_accuracy_shadow_zones.png')));
 end
 
 function testZoneDiagnosticsEmptyAndPlots(tc)
