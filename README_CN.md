@@ -53,9 +53,9 @@ scene.bellhop_exe = 'D:\code\Matlab\COA_cxz\bin\bellhop.exe';
 
 `run_accuracy_validation` 额外生成 `results/propagation/accuracy/propagation_accuracy_tl_field_2d.png`，按完整接收深度×距离网格绘制 Reference TL、Simulation TL 和 Simulation−Reference TL 三个子图。
 
-- Ref 与 Sim 采用相同 TL(dB) 色标，避免因独立自动色标而误读相对差别；
-- 差值图采用以 0 dB 为中心的对称色标，负误差为蓝、正误差为红；
-- 无效水域 / 非有限值以灰色遮蔽，仅在 Ref/Sim 共同有效的网格点计算差值；
+- Reference、Simulation **直接使用声学工具箱的 `plotshd` 绘制各自的 `case_C.shd`**，保留其原生 TL 绘图方式，两侧统一设置 TL(dB) 色标；
+- `plotshd` 不支持将两份 `.shd` 相减，第三幅差值图只用少量 `imagesc` 绘制，以 0 dB 为中心设置对称色标；
+- 差值仅使用 Ref/Sim 共同有效的网格点，无效部分以灰色遮蔽；
 - 暂不标出一维 TL 评价所选的接收深度。该图仅用于诊断，不改变10项指标或权重。
 
 ### 汇聚区 / 影区检测诊断
