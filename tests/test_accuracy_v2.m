@@ -47,6 +47,7 @@ end
 function testNoInventedTimingCalibration(tc)
 cfg=tc.TestData.cfg;
 a=struct('arrivals',arrival([1;1.02]));
+a.arrivals=rmfield(a.arrivals,{'tx_time_s','system_delay_s'});
 out=propagation_accuracy_v2(a,a,cfg);
 verifyEqual(tc,out.metrics.Status(8:10),repmat("未验证",3,1));
 end
