@@ -58,15 +58,8 @@ end
 out.metrics=table(names,score,status,cfg.weights,'VariableNames', ...
     {'Metric','Score','Status','Weight'});
 out.detail=detail;
-out.total_score=NaN; out.overall_status="未验证";
-% Do not silently reweight missing indicators until the user decides semantics.
-if all(isfinite(score(cfg.weights>0))) && any(cfg.weights>0)
-    active=cfg.weights>0;
-    out.total_score=sum(score(active).*cfg.weights(active))/sum(cfg.weights(active));
-    if out.total_score>=80, out.overall_status="准确";
-    elseif out.total_score>=60, out.overall_status="关注";
-    else, out.overall_status="不准确"; end
-end
+[out.total_score,out.overall_status]= ...
+    propagation_accuracy_aggregate_scores(out.metrics);
 end
 
 function [scores,details]=zone_group(a,b,cfg)
