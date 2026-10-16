@@ -29,6 +29,16 @@ if eval.zone_diagnostics.available
         numel(eval.zone_diagnostics.simulation.shadow), ...
         size(eval.zone_diagnostics.shadow_pairs,1));
 else
+    % Do not leave stale figures/CSVs from a previous valid run when a new
+    % environment lacks sufficient sampling for region extraction.
+    stale={'propagation_accuracy_convergence_zones.png', ...
+        'propagation_accuracy_shadow_zones.png', ...
+        'propagation_accuracy_zone_detections.csv', ...
+        'propagation_accuracy_zone_matches.csv'};
+    for k=1:numel(stale)
+        filename=fullfile(outdir,stale{k});
+        if isfile(filename), delete(filename); end
+    end
     fprintf('Zone diagnostics unavailable: TL sampling did not satisfy detection conditions.\n');
 end
 
