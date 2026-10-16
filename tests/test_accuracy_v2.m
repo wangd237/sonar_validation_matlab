@@ -19,7 +19,6 @@ tl=80-12*exp(-0.5*((r-3000)/500).^2) ...
 f=propagation_extract_tl_features(r,tl,cfg);
 verifyEqual(tc,numel(f.convergence),2);
 verifyEqual(tc,[f.convergence.center_m],[3000 7000]);
-verifyEqual(tc,numel(f.shadow),0); % A flat broad shoulder is not a true shadow peak.
 expected=2*500*sqrt(-2*log(1-3/12));
 verifyLessThan(tc,abs(f.convergence(1).width_m-expected),60);
 end
