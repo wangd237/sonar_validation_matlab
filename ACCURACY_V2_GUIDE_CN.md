@@ -49,6 +49,7 @@ run_accuracy_validation
 - `results/propagation/accuracy/propagation_accuracy_metrics.csv`：10项指标分数、状态和权重；
 - `results/propagation/accuracy/propagation_accuracy_submetrics.csv`：可导出的量化子指标（例如 TL RMSE、Pearson、TP/FP/FN、位置偏差和时延差异）；
 - `results/propagation/accuracy/propagation_accuracy_tl_curve.png`：相同深度、共同距离下的 TL 曲线及差异；
+- `results/propagation/accuracy/propagation_accuracy_tl_field_2d.png`：Ref、Sim 完整二维 TL 场和逐网格差值图；两幅 TL 使用同一色标，差值使用以0为中心的对称色标，无效水域为灰色，不叠加接收深度；
 - `results/propagation/accuracy/propagation_accuracy_convergence_zones.png`：原始/平滑 TL、汇聚区中心、3 dB边界、匹配门限与匹配连线；
 - `results/propagation/accuracy/propagation_accuracy_shadow_zones.png`：相同要素，用于影区；
 - `results/propagation/accuracy/propagation_accuracy_zone_detections.csv`：每个检测区域的 Ref/Sim、中心、边界、宽度、显著度、截断标记和匹配状态；
@@ -60,6 +61,15 @@ run_accuracy_validation
 这些结果直接取自 `propagation_accuracy_v2` 已参与评分的候选区域和匹配对，**画图不执行二次 findpeaks**。如果距离分辨率不足而不能提取区域，程序会删除之前留下的区域诊断图与区域 CSV，并在控制台提示，避免误读过期图表。
 
 后续实验使用标准经验公式设计的环境时，只需修改 `propagation_default_scene.m` 中参考和仿真三件套路径，再独立运行 `run_accuracy_validation`。此阶段没有实现自动生成经验环境。
+
+二维 TL 绘图使用 BELLHOP 适配器输出的 `tl_db`（尺寸为接收深度×接收距离）以及两侧 `valid_mask`。要求 Ref/Sim 具有相同的接收距离和深度网格；不会改变一维提取、区域匹配或准确性分数。
+
+图形单元测试（无需 Bellhop）：
+
+```matlab
+results = runtests('tests/test_accuracy_tl_field_2d.m');
+assertSuccess(results);
+```
 
 ## 测试状态
 
