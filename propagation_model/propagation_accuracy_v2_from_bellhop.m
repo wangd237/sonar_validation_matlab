@@ -14,6 +14,7 @@ r=ref.range_m(:); valid=valid(:);
 % Identify contiguous usable samples; no interpolation across dry gaps.
 runs=contiguous_runs(valid);
 a=struct(); b=struct();
+curve=struct('range_m',[],'ref_tl_db',[],'sim_tl_db',[]);
 if ~isempty(runs)
     [~,which]=max(cellfun(@numel,runs));
     ix=runs{which};
@@ -21,6 +22,8 @@ if ~isempty(runs)
         a.range_m=r(ix); b.range_m=r(ix);
         a.tl_db=ref.tl_db(iz,ix).';
         b.tl_db=sim.tl_db(iz,ix).';
+        curve=struct('range_m',r(ix),'ref_tl_db',a.tl_db(:), ...
+            'sim_tl_db',b.tl_db(:));
     end
 end
 % For Bellhop-generated mock arrivals, the simulation impulse-response
@@ -34,6 +37,7 @@ if ~isempty(idx)
     a.arrivals=ar; b.arrivals=as;
 end
 output=propagation_accuracy_v2(a,b,cfg);
+output.tl_curve=curve;
 output.receiver_depth_m=z(iz);
 output.receiver_range_m=NaN;
 if ~isempty(idx), output.receiver_range_m=r(idx); end
