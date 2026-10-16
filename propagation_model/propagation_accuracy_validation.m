@@ -59,7 +59,7 @@ if isfield(eval,'tl_curve') && ~isempty(eval.tl_curve.range_m)
 end
 % A full depth-by-range diagnostic is independent of the 1-D TL slicing
 % and does not change any of the ten evaluation metrics.
-propagation_accuracy_plot_tl_field_2d(ref,sim,outdir);
+propagation_accuracy_plot_tl_field_2d(ref,sim,outdir,scene.toolbox_dir);
 end
 
 function plot_tl_comparison(curve,outdir)
