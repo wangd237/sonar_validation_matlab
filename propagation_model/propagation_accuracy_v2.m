@@ -112,7 +112,7 @@ end
 
 function [scores,details]=arrival_group(a,b,cfg)
 scores=nan(3,1); details=cell(3,1);
-required={'delay_s','amplitude','top_bounces','bottom_bounces'};
+required={'delay_s','amplitude'};
 if ~all(isfield(a,required)) || ~all(isfield(b,required)), return; end
 if ~isfield(a,'tx_time_s') || ~isfield(b,'tx_time_s') || ...
         ~isfield(a,'system_delay_s') || ~isfield(b,'system_delay_s')
@@ -121,9 +121,10 @@ end
 a.delay_s=a.delay_s(:)-a.tx_time_s-a.system_delay_s;
 b.delay_s=b.delay_s(:)-b.tx_time_s-b.system_delay_s;
 if ~all(isfinite(a.delay_s)) || ~all(isfinite(b.delay_s)), return; end
-m=propagation_match_arrivals(a,b,cfg);
+m=propagation_match_arrivals_ordered(a,b,cfg);
 details{1}=struct('matched',m.matched_count, ...
-    'reference_count',m.reference_count,'simulation_count',m.simulation_count);
+    'reference_count',m.reference_count,'simulation_count',m.simulation_count, ...
+    'path_labels_used',m.path_labels_used);
 if ~isempty(m.delay_error_s)
     err=sqrt(mean(m.delay_error_s.^2));
     scores(1)=lower_score(err,cfg.limits.arrival_delay_s);
@@ -131,23 +132,15 @@ if ~isempty(m.delay_error_s)
 end
 pairs=m.pairs;
 if size(pairs,1)>=2
-    [~,order]=sort(a.delay_s(pairs(:,1))); pairs=pairs(order,:);
-    intervals=[];
-    for k=1:size(pairs,1)-1
-        % Only originally adjacent effective reference paths, with order preserved.
-        [~,refs_order]=sort(a.delay_s(m.reference_indices));
-        selected=m.reference_indices(refs_order);
-        i=find(selected==pairs(k,1)); j=find(selected==pairs(k+1,1));
-        if j==i+1 && b.delay_s(pairs(k+1,2))>=b.delay_s(pairs(k,2))
-            intervals(end+1,1)=abs((b.delay_s(pairs(k+1,2))-b.delay_s(pairs(k,2))) ...
-                -(a.delay_s(pairs(k+1,1))-a.delay_s(pairs(k,1)))); %#ok<AGROW>
-        end
-    end
-    if ~isempty(intervals)
-        delta=sqrt(mean(intervals.^2));
-        scores(2)=lower_score(delta,cfg.limits.adjacent_delay_s);
-        details{2}=struct('rmse_s',delta,'compared_intervals',numel(intervals));
-    end
+    % The ordered matcher returns chronological pairs. Compare consecutive
+    % gaps in that matched sequence; no ray-family metadata is required.
+    ref_intervals=diff(a.delay_s(pairs(:,1)));
+    sim_intervals=diff(b.delay_s(pairs(:,2)));
+    interval_error=sim_intervals-ref_intervals;
+    delta=sqrt(mean(interval_error.^2));
+    scores(2)=lower_score(delta,cfg.limits.adjacent_delay_s);
+    details{2}=struct('rmse_s',delta, ...
+        'compared_intervals',numel(interval_error));
 end
 if m.reference_count>0 && m.simulation_count>0
     % Last effective path: independent of matching, after time calibration.

@@ -171,6 +171,52 @@ verifyError(tc,@() propagation_accuracy_v2_from_bellhop(ref,ref,cfg), ...
     'propagation:AccuracyDepth');
 end
 
+function testMatchingGateDoesNotRelaxArrivalScoreLimits(tc)
+cfg=tc.TestData.cfg;
+verifyEqual(tc,cfg.match_delay_s,0.010,'AbsTol',1e-12);
+a=struct('arrivals',arrival([1;1.02]));
+b=a;
+b.arrivals.delay_s=b.arrivals.delay_s+0.008;
+out=propagation_accuracy_v2(a,b,cfg);
+verifyEqual(tc,out.detail{8}.matched,2);
+verifyLessThan(tc,out.metrics.Score(8),60);
+verifyEqual(tc,out.metrics.Status(8),"不准确");
+end
+
+function testOrderedArrivalMatchingUsesBounceLabels(tc)
+cfg=tc.TestData.cfg;
+a=arrival([1;1.02;1.04]);
+b=arrival([1.008;1.028;1.048]);
+a.top_bounces=[0;1;2]; a.bottom_bounces=[2;1;0];
+b.top_bounces=[0;1;9]; b.bottom_bounces=[2;1;9];
+m=propagation_match_arrivals_ordered(a,b,cfg);
+verifyTrue(tc,m.path_labels_used);
+verifyEqual(tc,m.pairs,[1 1;2 2]);
+verifyEqual(tc,m.delay_error_s,0.008*ones(2,1),'AbsTol',1e-12);
+end
+
+function testOrderedArrivalMatchingSkipsUnmatchedPaths(tc)
+cfg=tc.TestData.cfg;
+a=rmfield(arrival([1;1.02;1.04]),{'top_bounces','bottom_bounces'});
+b=rmfield(arrival([0.9;1.008;1.048;1.2]), ...
+    {'top_bounces','bottom_bounces'});
+m=propagation_match_arrivals_ordered(a,b,cfg);
+verifyFalse(tc,m.path_labels_used);
+verifyEqual(tc,m.pairs,[1 2;3 3]);
+verifyEqual(tc,m.matched_count,2);
+end
+
+function testArrivalMetricsDoNotRequireBounceMetadata(tc)
+cfg=tc.TestData.cfg;
+a=rmfield(arrival([1;1.02]),{'top_bounces','bottom_bounces'});
+b=a; b.delay_s=b.delay_s+0.002;
+out=propagation_accuracy_v2(struct('arrivals',a),struct('arrivals',b),cfg);
+verifyEqual(tc,out.detail{8}.matched,2);
+verifyFalse(tc,out.detail{8}.path_labels_used);
+verifyEqual(tc,out.detail{8}.rmse_s,0.002,'AbsTol',1e-12);
+verifyEqual(tc,out.detail{9}.compared_intervals,1);
+end
+
 function z=zone(c,w)
 z=struct('center_m',c,'left_m',c-w/2,'right_m',c+w/2, ...
     'width_m',w,'prominence_db',12,'truncated',false);

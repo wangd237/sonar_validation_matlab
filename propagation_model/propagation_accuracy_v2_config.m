@@ -11,8 +11,9 @@ cfg.evaluation_depth_tolerance_m=25;
 cfg.smooth_window_m=5000;
 cfg.maximum_zone_step_m=250;
 cfg.arrival_relative_floor_db=-40;
-cfg.match_delay_s=0.005;
-cfg.match_bounce_counts=true;
+% Candidate-association gate only: paths within 10 ms may be compared.
+% Accuracy is still scored against the stricter 1/5 ms limits below.
+cfg.match_delay_s=0.010;
 % Each pair: [80-point threshold, 60-point threshold].
 cfg.limits.tl_rmse_db=[3 8];
 cfg.limits.tl_correlation_loss=[0.05 0.3];
