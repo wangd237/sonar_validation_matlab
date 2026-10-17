@@ -70,6 +70,42 @@ verifyEqual(tc,height(T),3);
 verifyEqual(tc,T.StartValue,T.EndValue);
 end
 
+function testNoPassingSamplesReturnsTypedEmptyTable(tc)
+Parameter=repmat("frequency",3,1);
+Unit=repmat("Hz",3,1);
+Value=[10;50;100];
+ValueLabel=string(Value);
+FocusStatus=["不准确";"未验证";"运行失败"];
+AccuracyStatus=["准确";"准确";"准确"];
+P=table(Parameter,Unit,Value,ValueLabel,FocusStatus,AccuracyStatus);
+T=propagation_universality_intervals(P,"focus");
+verifyEqual(tc,height(T),0);
+verifyEqual(tc,width(T),6);
+verifyClass(tc,T.StartValue,'double');
+verifyClass(tc,T.EndValue,'double');
+verifyClass(tc,T.Parameter,'string');
+verifyClass(tc,T.SampleCount,'double');
+empty=propagation_universality_intervals(P([],:),"focus");
+verifyEqual(tc,height(empty),0);
+verifyEqual(tc,empty.Properties.VariableNames,T.Properties.VariableNames);
+verifyClass(tc,empty.StartValue,'double');
+end
+
+function testCategoricalFailuresDoNotMergeLevels(tc)
+Parameter=repmat("ssp_type",4,1);
+Unit=repmat("category",4,1);
+Value=(1:4)';
+ValueLabel=["mixed";"thermocline";"channel";"unknown"];
+FocusStatus=["准确";"运行失败";"准确";"未验证"];
+AccuracyStatus=repmat("准确",4,1);
+P=table(Parameter,Unit,Value,ValueLabel,FocusStatus,AccuracyStatus);
+T=propagation_universality_intervals(P,"focus");
+verifyEqual(tc,T.StartValue,[1;3]);
+verifyEqual(tc,T.EndValue,[1;3]);
+verifyEqual(tc,T.StartLabel,["mixed";"channel"]);
+verifyEqual(tc,T.SampleCount,[1;1]);
+end
+
 function testAllSevenCaseGenerators(tc)
 cfg=tc.TestData.cfg;
 parent=tempname; mkdir(parent);
