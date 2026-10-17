@@ -42,6 +42,13 @@ else
     fprintf('Zone diagnostics unavailable: TL sampling did not satisfy detection conditions.\n');
 end
 
+arrival_plot=fullfile(outdir,'propagation_accuracy_multipath_arrivals.png');
+if isfield(eval,'arrival_diagnostics') && eval.arrival_diagnostics.available
+    propagation_accuracy_plot_arrivals(eval,outdir);
+elseif isfile(arrival_plot)
+    delete(arrival_plot);
+end
+
 result.scene=scene;
 result.reference=ref;
 result.model=sim;

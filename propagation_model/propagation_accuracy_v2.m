@@ -11,6 +11,8 @@ score=nan(10,1); status=repmat("未验证",10,1); detail=cell(10,1);
 % must use the same features and pairs as scoring; no secondary peak detection.
 zone_diag=struct('available',false,'reference',[],'simulation',[], ...
     'convergence_pairs',zeros(0,2),'shadow_pairs',zeros(0,2));
+arrival_diag=struct('available',false,'reference',[],'simulation',[], ...
+    'match',[]);
 assert(isequal(size(cfg.weights),[10 1]) && all(isfinite(cfg.weights)) ...
     && all(cfg.weights>=0),'propagation:AccuracyWeights','Invalid weights.');
 % Only explicit single-depth TL vectors are used; never fabricate spatial coverage.
@@ -55,7 +57,8 @@ end
 % launch-time or fixed-system-delay correction.
 if isfield(reference,'arrivals') && isfield(simulation,'arrivals') ...
         && isstruct(reference.arrivals) && isstruct(simulation.arrivals)
-    [score(8:10),detail(8:10)]=arrival_group(reference.arrivals,simulation.arrivals,cfg);
+    [score(8:10),detail(8:10),arrival_diag]= ...
+        arrival_group(reference.arrivals,simulation.arrivals,cfg);
 end
 for i=1:10
     if isfinite(score(i))
@@ -68,6 +71,7 @@ out.metrics=table(names,score,status,cfg.weights,'VariableNames', ...
     {'Metric','Score','Status','Weight'});
 out.detail=detail;
 out.zone_diagnostics=zone_diag;
+out.arrival_diagnostics=arrival_diag;
 [out.total_score,out.overall_status]= ...
     propagation_accuracy_aggregate_scores(out.metrics);
 end
@@ -110,8 +114,10 @@ if tp>0
 end
 end
 
-function [scores,details]=arrival_group(a,b,cfg)
+function [scores,details,diagnostics]=arrival_group(a,b,cfg)
 scores=nan(3,1); details=cell(3,1);
+diagnostics=struct('available',false,'reference',[], ...
+    'simulation',[],'match',[]);
 required={'delay_s','amplitude'};
 if ~all(isfield(a,required)) || ~all(isfield(b,required)), return; end
 if ~isfield(a,'tx_time_s') || ~isfield(b,'tx_time_s') || ...
@@ -122,6 +128,8 @@ a.delay_s=a.delay_s(:)-a.tx_time_s-a.system_delay_s;
 b.delay_s=b.delay_s(:)-b.tx_time_s-b.system_delay_s;
 if ~all(isfinite(a.delay_s)) || ~all(isfinite(b.delay_s)), return; end
 m=propagation_match_arrivals_ordered(a,b,cfg);
+diagnostics=struct('available',true,'reference',a, ...
+    'simulation',b,'match',m);
 details{1}=struct('matched',m.matched_count, ...
     'reference_count',m.reference_count,'simulation_count',m.simulation_count, ...
     'path_labels_used',m.path_labels_used);
@@ -132,8 +140,7 @@ if ~isempty(m.delay_error_s)
 end
 pairs=m.pairs;
 if size(pairs,1)>=2
-    % The ordered matcher returns chronological pairs. Compare consecutive
-    % gaps in that matched sequence; no ray-family metadata is required.
+    % Compare consecutive gaps in the label-consistent matched sequence.
     ref_intervals=diff(a.delay_s(pairs(:,1)));
     sim_intervals=diff(b.delay_s(pairs(:,2)));
     interval_error=sim_intervals-ref_intervals;

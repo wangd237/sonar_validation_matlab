@@ -215,6 +215,12 @@ verifyEqual(tc,out.detail{8}.matched,2);
 verifyFalse(tc,out.detail{8}.path_labels_used);
 verifyEqual(tc,out.detail{8}.rmse_s,0.002,'AbsTol',1e-12);
 verifyEqual(tc,out.detail{9}.compared_intervals,1);
+verifyTrue(tc,out.arrival_diagnostics.available);
+temp=tempname; mkdir(temp);
+cleanup=onCleanup(@() rmdir(temp,'s')); %#ok<NASGU>
+propagation_accuracy_plot_arrivals(out,temp);
+verifyTrue(tc,isfile(fullfile(temp, ...
+    'propagation_accuracy_multipath_arrivals.png')));
 end
 
 function z=zone(c,w)
