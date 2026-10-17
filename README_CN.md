@@ -1,6 +1,6 @@
 # 声传播计算模型校验 MATLAB 工程
 
-当前处于 **模块独立迭代 / Bellhop Mock 验证** 阶段。一次只运行一个模块，分别检查其子指标、得分和输出，不再默认执行 `run_all`。三个模块的完整新指标体系还未全部升级。
+当前处于 **模块独立迭代 / Bellhop Mock 验证** 阶段。一次只运行一个模块，分别检查其子指标、得分和输出，不再默认执行 `run_all`。准确性 V2 与普适性 V2 已采用统一指标；溯源性仍保留旧版。
 
 ## 独立运行入口
 
@@ -8,7 +8,7 @@
 
 ```matlab
 run_accuracy_validation       % 准确性：新版10项指标（本阶段推荐）
-run_universality_validation   % 普适性：旧版指标，待后续更新
+run_universality_validation   % 普适性：七类参数扫描 + 准确性 V2（Bellhop Mock）
 run_traceability_validation   % 溯源性：旧版指标，待后续更新
 ```
 
@@ -20,7 +20,7 @@ run_traceability_validation   % 溯源性：旧版指标，待后续更新
 | 模块 | 输出目录 | 主要结果 |
 |---|---|---|
 | 准确性 V2 | `results/propagation/accuracy/` | `propagation_accuracy_metrics.csv`、`propagation_accuracy_submetrics.csv`、`propagation_accuracy_tl_curve.png`、`propagation_accuracy_tl_field_2d.png`、汇聚区/影区诊断图与 CSV、`propagation_accuracy_result.mat` |
-| 普适性（旧版） | `results/propagation/universality/` | `propagation_universality_scene_results.csv`、统计 CSV、MAT、图片 |
+| 普适性 V2（Mock） | `results/propagation/universality/` | `propagation_universality_points.csv`、指标分数/原始子指标 CSV、采样区间 CSV、MAT、逐参数曲线 |
 | 溯源性（旧版） | `results/propagation/traceability/` | `propagation_traceability_parameter_ranking.csv`、基线 CSV、MAT、图片 |
 
 **不要将历史输出的** `validation_summary.csv`、`propagation_complete_result.mat` **视为新版总评结果**；独立入口不再生成它们。旧结果文件可能仍在目录内，需按生成时间辨别。
@@ -73,6 +73,10 @@ scene.bellhop_exe = 'D:\code\Matlab\COA_cxz\bin\bellhop.exe';
 
 算法及接口细节见 [ACCURACY_V2_GUIDE_CN.md](ACCURACY_V2_GUIDE_CN.md)。
 
+## 普适性 V2
+
+7类单因素扫描、10项指标开关、Bellhop Mock 双侧同工况、采样通过区间与输出详见 [UNIVERSALITY_V2_GUIDE_CN.md](UNIVERSALITY_V2_GUIDE_CN.md)。尚无待验模型，所得分数和区间不能代表真实适用范围。
+
 ## 测试
 
 先单独运行无需 Bellhop 的评价函数测试：
@@ -83,7 +87,7 @@ results = runtests('tests/test_accuracy_v2.m');
 assertSuccess(results);
 ```
 
-旧版多径与指标基础回归（主要服务于尚未升级的普适性、溯源性）：
+旧版多径与指标基础回归（主要服务于溯源性）：
 
 ```matlab
 results = runtests('tests/test_propagation_metrics.m');
